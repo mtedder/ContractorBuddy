@@ -84,9 +84,16 @@ type Category struct {
 	VendorCategory string `json:"vendorCategory"`
 }
 
-//State can take on the following lifecyle of values of submitted, pending, processed, live and/or dead
+/*
+* State can take on the following lifecyle of values of:
+* submitted = client submitted to vendor for a quote.
+* pending = Vendor provided a quote to the client & waiting for approval from client
+* approved = Client approved vendor quote and OK for vendor to start job.
+* complete = Vendor marked client job as complete
+*/
 type QuoteRequest struct {
 	ID string `json:"id"`
+	VendorName string `json:"vendorName"`
 	VendorId string `json:"vendorId"`
 	ClientId string `json:"clientId"`
 	State string `json:"state"`
@@ -100,7 +107,8 @@ type TodoPageData struct {
 
 var client *firestore.Client
 
-var tmpl *template.Template
+var tmplClient *template.Template
+var tmplVendor *template.Template
 
 func init(){
 		// Use a service account
@@ -119,8 +127,12 @@ func init(){
 	}
 
 	//tmpl := template.Must(template.ParseFiles("assets/client.html"))
-	tmpl, err = template.ParseFiles("assets/client.html")
-	// tmpl, err = template.ParseFiles("assets/register.html")
+	tmplClient, err = template.ParseFiles("assets/client.html")
+	if err != nil {
+		log.Fatalf("Failed to create template: %v", err)
+	}
+
+	tmplVendor, err = template.ParseFiles("assets/vendor.html")
 	if err != nil {
 		log.Fatalf("Failed to create template: %v", err)
 	}
@@ -155,7 +167,7 @@ func main() {
 	router.HandleFunc("/updateQuoteRequest", updateQuoteRequestRte).Methods("POST")
 	router.HandleFunc("/getQuoteRequestByClientId", getQuoteRequestByClientIdRte).Methods("GET")
 	router.HandleFunc("/getQuoteRequestByVendorId", getQuoteRequestByVendorIdRte).Methods("GET")
-	router.HandleFunc("/getLiveQuoteRequestByVendorId", getLiveQuoteRequestByVendorIdRte).Methods("GET")
+	router.HandleFunc("/getQuoteRequestByVendorIdAndState", getQuoteRequestByVendorIdAndStateRte).Methods("GET")
 		
 	//router.HandleFunc("/events", getAllEvents).Methods("GET")
 	//router.HandleFunc("/events/{id}", getOneEvent).Methods("GET")
@@ -265,10 +277,9 @@ func userLoginRte(w http.ResponseWriter, r *http.Request){
 		}
 		
 		if user.Type == "client" {			
-			tmpl.Execute(w, user)//client template
-			// http.Redirect(w, r, "/assets/client.html", http.StatusFound)
+			tmplClient.Execute(w, user)//client template
 		}else if user.Type == "vendor" {//forward to vendor page
-			http.Redirect(w, r, "/assets/vendor.html", http.StatusFound)
+			tmplVendor.Execute(w, user)//client template
 		}
 
 }
@@ -310,9 +321,9 @@ func registerUserRte(w http.ResponseWriter, r *http.Request) {
 	
 	//fmt.Fprint(w, "User registered")
 	if newUser.Type == "client" {
-		http.Redirect(w, r, "/assets/client.html", http.StatusFound)
+		tmplClient.Execute(w, newUser)//client template
 	}else if newUser.Type == "vendor" {//forward to vendor page
-		http.Redirect(w, r, "/assets/vendor.html", http.StatusFound)
+		tmplVendor.Execute(w, newUser)//client template
 	}
 	
 	//json.NewEncoder(w).Encode(&newUser)	
@@ -366,26 +377,30 @@ func updateUserProfile(user User){
 	}, firestore.MergeAll)
 }
 
-//register user event
 /*
 * Get vendors by category routing
 */
 func getVendorByCategoryRte(w http.ResponseWriter, r *http.Request) {	
 	r.ParseForm() //required
+	
+	category := r.Form.Get("vendorCategory")
+	// fmt.Println(category)
+	vendors := getVendorByCategory(category)
 
-	category := r.Form.Get("cat")
-	getVendorByCategory(category)
+	json.NewEncoder(w).Encode(&vendors)
+
 }
+
 /*
 * Return an array of all vendors types for the specified category.
 */
-func getVendorByCategory(category string){
+func getVendorByCategory (category string) []User{
 
 	var users []User
 	user := User{}
 
 	//create query
-	iter := client.Collection("users").Where("VendorCategory", "==", "plumbing").Documents(context.Background())
+	iter := client.Collection("users").Where("VendorCategory", "==", category).Documents(context.Background())
 
 	for {
         doc, err := iter.Next()
@@ -402,7 +417,8 @@ func getVendorByCategory(category string){
 		//mapstructure.Decode(doc.Data(), &user)
 		users = append(users, user)
 	}
-	fmt.Println(users)
+	// fmt.Println(users)
+	return users
 }
 
 /*
@@ -437,7 +453,6 @@ func getAllCategories () []Category{
         }
 		//fmt.Println(doc.Data())
 		doc.DataTo(&category)
-		//fmt.Println(category)
 		//convert map data to struct
 		//mapstructure.Decode(doc.Data(), &category)
 		categories = append(categories, category)
@@ -461,6 +476,7 @@ func createQuoteRequestRte(w http.ResponseWriter, r *http.Request){
 	_ = errr // errr is now "used"
 	
 	//or get form value manually
+	quoteRequest.VendorName = r.PostFormValue("vendorName")
 	quoteRequest.VendorId = r.PostFormValue("vendorId")
 	quoteRequest.ClientId = r.PostFormValue("clientId")
 	quoteRequest.State = r.PostFormValue("state")
@@ -511,6 +527,8 @@ func updateQuoteRequestRte(w http.ResponseWriter, r *http.Request){
 	_ = errr // errr is now "used"
 
 	//or get form value manually
+	quoteRequest.ID = r.PostFormValue("ID")
+	quoteRequest.VendorName = r.PostFormValue("vendorName")
 	quoteRequest.VendorId = r.PostFormValue("vendorId")
 	quoteRequest.ClientId = r.PostFormValue("clientId")
 	quoteRequest.State = r.PostFormValue("state")
@@ -527,6 +545,7 @@ func updateQuoteRequestRte(w http.ResponseWriter, r *http.Request){
 func updateQuoteRequest(quoteRequest QuoteRequest){
 	
 	client.Collection("quotes").Doc(quoteRequest.ID).Set(context.Background(), map[string]interface{}{
+		"VendorName":quoteRequest.VendorName,
 		"VendorId":quoteRequest.VendorId,
 		"ClientId":quoteRequest.ClientId,
 		"State":quoteRequest.State,
@@ -540,21 +559,26 @@ func updateQuoteRequest(quoteRequest QuoteRequest){
 }
 
 /*
-* Return all QuoteRequest with this client id routing.
+* Get request - Return all QuoteRequest with this client id routing.
 */
 func getQuoteRequestByClientIdRte(w http.ResponseWriter, r *http.Request){
 		
 		r.ParseForm() //required
 
-		clientId := r.PostFormValue("clientId")
+		clientId := r.Form.Get("clientId")
 
-		getQuoteRequestByClientId(clientId)
+		//fmt.Println(clientId)
+
+		quoteRequests := getQuoteRequestByClientId(clientId)
+
+		json.NewEncoder(w).Encode(&quoteRequests)
+
 }
 
 /*
 * Return all QuoteRequest with this client id
 */
-func getQuoteRequestByClientId(clientId string){
+func getQuoteRequestByClientId(clientId string) []QuoteRequest{
 	var quoteRequests []QuoteRequest
 	quoteRequest := QuoteRequest{}
 
@@ -575,7 +599,8 @@ func getQuoteRequestByClientId(clientId string){
 		doc.DataTo(&quoteRequest)
 		quoteRequests = append(quoteRequests, quoteRequest)
 	}
-	fmt.Println(quoteRequests)
+	//fmt.Println(quoteRequests)
+	return quoteRequests
 }
 
 /*
@@ -585,21 +610,25 @@ func getQuoteRequestByVendorIdRte(w http.ResponseWriter, r *http.Request){
 
 	r.ParseForm() //required
 
-	vendorId := r.PostFormValue("vendorId")
+	
 
-	getQuoteRequestByVendorId(vendorId)
+	vendorId := r.Form.Get("vendorId")
+
+	quoteRequests := getQuoteRequestByVendorId(vendorId)
+
+	json.NewEncoder(w).Encode(&quoteRequests)
 }
 
 /*
 * Return all QuoteRequest with this client id.
 */
-func getQuoteRequestByVendorId(vendorId string){
+func getQuoteRequestByVendorId(vendorId string) [] QuoteRequest{
 
 	var quoteRequests []QuoteRequest
 	quoteRequest := QuoteRequest{}
 
 	//create query
-	iter := client.Collection("quotes").Where("vendorId", "==", vendorId).Documents(context.Background())
+	iter := client.Collection("quotes").Where("VendorId", "==", vendorId).Documents(context.Background())
 
 	for {
 		doc, err := iter.Next()
@@ -615,31 +644,36 @@ func getQuoteRequestByVendorId(vendorId string){
 		doc.DataTo(&quoteRequest)
 		quoteRequests = append(quoteRequests, quoteRequest)
 	}
-	fmt.Println(quoteRequests)
+
+	// fmt.Println(quoteRequests)
+	return quoteRequests
 }
 
 /*
 * Return all QuoteRequest with this client id and live state routing.
 */
-func getLiveQuoteRequestByVendorIdRte(w http.ResponseWriter, r *http.Request){
+func getQuoteRequestByVendorIdAndStateRte(w http.ResponseWriter, r *http.Request){
 
 	r.ParseForm() //required
 
-	vendorId := r.PostFormValue("vendorId")
+	vendorId := r.Form.Get("vendorId")
+	state := r.Form.Get("state")
 
-	getLiveQuoteRequestByVendorId(vendorId)
+	quoteRequests := getQuoteRequestByVendorIdAndState(vendorId, state)
+	
+	json.NewEncoder(w).Encode(&quoteRequests)
 }
 
 /*
 * Return all QuoteRequest with this client id and live state.
 */
-func getLiveQuoteRequestByVendorId(vendorId string){
+func getQuoteRequestByVendorIdAndState(vendorId string, state string) []QuoteRequest{
 
 	var quoteRequests []QuoteRequest
 	quoteRequest := QuoteRequest{}
 
 	//create query
-	iter := client.Collection("quotes").Where("vendorId", "==", vendorId).Where("state", "==", "live").Documents(context.Background())
+	iter := client.Collection("quotes").Where("VendorId", "==", vendorId).Where("State", "==", state).Documents(context.Background())
 
 	for {
 		doc, err := iter.Next()
@@ -655,7 +689,8 @@ func getLiveQuoteRequestByVendorId(vendorId string){
 		doc.DataTo(&quoteRequest)
 		quoteRequests = append(quoteRequests, quoteRequest)
 	}
-	fmt.Println(quoteRequests)
+	// fmt.Println(quoteRequests)
+	return quoteRequests
 }
 
 // [END indexHandler]

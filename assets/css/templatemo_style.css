@@ -523,13 +523,14 @@ hr {
 
 .service-item {
   position: relative;
-  color: white;
+  color: black;
   text-align: center;
   margin-bottom: 30px;
 }
 
 .service-item a {
-	color: #ffff66;
+  /* color: #ffff66; */
+  color: #fd2a2a;
 }
 
 .service-item a:hover {
