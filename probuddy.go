@@ -35,8 +35,19 @@
 // https://forum.golangbridge.org/t/serving-css-files/2386/7
 // https://alligator.io/js/axios-vanilla-js/
 // https://github.com/axios/axios
+// https://blog.golang.org/the-app-engine-sdk-and-workspaces-gopath
+// https://www.linode.com/docs/development/go/install-go-on-ubuntu/
+
+//App
+// https://cloud.google.com/appengine/docs/standard/go111/quickstart
+// https://cloud.google.com/appengine/docs/standard/go/building-app/
+// Setup go path
+// export GOPATH=$HOME/go
+// export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 // [START gae_go111_app]
+
+// +build !appengine
 
 // Sample helloworld is an App Engine app.
 package main
@@ -111,6 +122,8 @@ var tmplClient *template.Template
 var tmplVendor *template.Template
 
 func init(){
+
+	//http.HandleFunc("/", indexHandler)
 		// Use a service account
 	// Get a Firestore client.	
 	ctx := context.Background()
@@ -239,13 +252,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	fmt.Fprint(w, "Hello, World2!")
+	//fmt.Fprint(w, "Hello, World2!")
+	http.Redirect(w, r, "/assets/index.html", http.StatusFound)
 }
 
 /*
 * Login flow. Look up user in DB. If they do not exist redirect to registration page.
 */
-func userLoginRte(w http.ResponseWriter, r *http.Request){
+func userLoginRte(w http.ResponseWriter, r *http.Request){	
 
 	r.ParseForm() //required
 
