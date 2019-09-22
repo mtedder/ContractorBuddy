@@ -45,6 +45,8 @@
 // export GOPATH=$HOME/go
 // export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
+// export GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
+
 // [START gae_go111_app]
 
 // +build !appengine
@@ -145,6 +147,7 @@ func init(){
 		log.Fatalf("Failed to create template: %v", err)
 	}
 
+	//tmplVendor = template.Must(template.ParseFiles("assets/vendor.html"))
 	tmplVendor, err = template.ParseFiles("assets/vendor.html")
 	if err != nil {
 		log.Fatalf("Failed to create template: %v", err)
