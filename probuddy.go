@@ -293,7 +293,7 @@ func userLoginRte(w http.ResponseWriter, r *http.Request){
 			http.Redirect(w, r, "/assets/register.html", http.StatusFound)
 		}
 		
-		if user.Type == "client" {			
+		if user.Type == "client" {					
 			tmplClient.Execute(w, user)//client template
 		}else if user.Type == "vendor" {//forward to vendor page
 			tmplVendor.Execute(w, user)//client template
@@ -480,7 +480,7 @@ func getAllCategories () []Category{
 /*
 * Create a quote request in the quotes table routing.
 */
-func createQuoteRequestRte(w http.ResponseWriter, r *http.Request){
+func createQuoteRequestRte(w http.ResponseWriter, r *http.Request){	
 	// Create a new instance of User
 	quoteRequest := QuoteRequest{}	
 
@@ -498,7 +498,7 @@ func createQuoteRequestRte(w http.ResponseWriter, r *http.Request){
 	quoteRequest.ClientId = r.PostFormValue("clientId")
 	quoteRequest.State = r.PostFormValue("state")
 	quoteRequest.Approved, err = strconv.ParseBool(r.PostFormValue("approved"))
-	quoteRequest.Price, errr = strconv.ParseFloat(r.PostFormValue("price"), 64)	
+	quoteRequest.Price, errr = strconv.ParseFloat(r.PostFormValue("price"), 64)		
 
 	//add new quoteRequest to db
 	createQuoteRequest(quoteRequest)
