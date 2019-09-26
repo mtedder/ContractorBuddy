@@ -61,28 +61,10 @@ https://templatemo.com/tm-406-flex
                     </div> <!-- /.container -->
                 </div> <!-- /.main-header -->
             </div> <!-- /.site-header -->
-            <div class="site-slider">
-                <div class="slider">
-                    <div class="flexslider">
-                        <ul class="slides">
-                            <li>
-                                <div class="overlay"></div>
-                                <img src="images/home-improvement-apps.jpg" alt="">
-                                <div class="slider-caption visible-md visible-lg">
-                                    <h2>Contractor Buddy</h2>
-                                    <p>Find Pros near you!</p>
-                                    <div class="contact-form">                                                                                       
-                                            <form method="post" name="loginform" id="loginform" action="/userLogin" >
-                                                <input type="text" placeholder="email" id="email" name="email">                    
-                                                <input type="submit" class="mainBtn" id="submit" value="Login">
-                                            </form>                                            
-                                        </div> <!-- /.contact-form -->
-                                </div>
-                            </li>                           
-                        </ul>
-                    </div> <!-- /.flexslider -->
-                </div> <!-- /.slider -->
-            </div> <!-- /.site-slider -->
+            <div id="app">
+                <login></login>
+            </div>
+            
         </div> <!-- /.site-main -->
             
         <div id="footer">
@@ -102,7 +84,13 @@ https://templatemo.com/tm-406-flex
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.0.min.js"><\/script>')</script>
         <script src="js/bootstrap.js"></script>
         <script src="js/plugins.js"></script>
-        <script src="js/main.js"></script>       
+        <script src="js/main.js"></script>
+
+        <script src="js/common.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+        <script src="js/indexvue.js"></script>       
         
         <!-- templatemo 406 flex -->
     </body>

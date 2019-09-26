@@ -54,20 +54,20 @@
                 </div> <!-- /.container -->
             </div> <!-- /.main-header -->
         </div> <!-- /.site-header -->
-
+        
         <div id="app">
             <div class="site-main" id="sTop">
                 <div class="content-section" id="services">
                         <div class="container">
                             <div class="row">
-                                
+                                    
                                 <div class="heading-section col-md-12 text-center">
                                         <h2>Client Page</h2>
                                         <p>Manage your profile, find Pros & get Quotes</p>
                                 </div> <!-- /.heading-section -->
 
-                                <div class="col-md-3 col-sm-6">
-                                    <profile></profile>
+                                <div class="col-md-3 col-sm-6">                                                                             
+                                    <profile username="{{.Name}}" useremail="{{.Email}}" userid="{{.ID}}"></profile>
                                 </div> <!-- /.col-md-3 -->
                                 <div class="col-md-3 col-sm-6">
                                     <search-pros></search-pros>
@@ -106,7 +106,7 @@
         <!-- Axios -->       
         <!-- <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
 
-        <script src="js/common.js"></script>
+        <!-- <script src="js/common.js"></script> -->
 
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 

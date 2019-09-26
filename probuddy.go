@@ -142,7 +142,8 @@ func init(){
 	}
 
 	//tmpl := template.Must(template.ParseFiles("assets/client.html"))
-	tmplClient, err = template.ParseFiles("assets/client.html")
+	// tmplClient, err = template.ParseFiles("assets/client.html")
+	tmplClient, err = template.ParseFiles("assets/clientvue.html")
 	if err != nil {
 		log.Fatalf("Failed to create template: %v", err)
 	}
@@ -372,6 +373,8 @@ func updateUserProfileRte(w http.ResponseWriter, r *http.Request) {
 	user := User{}
 	
 	r.ParseForm() //required
+
+	// fmt.Println(r.PostFormValue("name"))
 
 	//or get form value manually
 	user.ID = r.PostFormValue("id")

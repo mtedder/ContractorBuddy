@@ -1,25 +1,28 @@
-
-
   Vue.component('profile', {
+    props:{
+      username: String,
+      useremail: String,
+      userid: String
+    },
     template:`
         <div class="service-item" id="service-1">
                                         
           <div class="member-thumb">
                   <img src="images/profile.png" alt="">
                   <div class="team-overlay">
-                      <h3>{{name}}</h3>
+                      <h3></h3>
                       <span>Client Profile</span>
 
                       <div class="contact-form">                                                                                       
-                          <form name="profileform" id="profileform" onsubmit="event.preventDefault();updateFunction(this, event);">
+                          <form name="profileform" id="profileform" @submit.prevent="updateFunction">
                               <p>
-                                  <input name="name" type="text" id="name" placeholder="Your Name" :value="name">
+                                  <input v-model="name" type="text" id="name" placeholder="Your Name">
                               </p>
                               <p>
-                                  <input name="email" type="text" id="email" placeholder="Your Email" :value="email"> 
+                                  <input v-model="email" type="text" id="email" placeholder="Your Email"> 
                               </p>    
-                              <input name="id" type="hidden" :value="id"> 
-                              <input name="type" type="hidden" value="client">                                                                                                
+                              <input id="id" v-model="id" type="hidden"> 
+                              <input id="type" v-model="type" type="hidden" value="client">                                                                                                
                               <input type="submit" class="mainBtn" id="submit" value="Update Profile">
                           </form>
                       </div> <!-- /.contact-form -->
@@ -30,13 +33,50 @@
     `,
     data: function() {
       return {
-        name:'User1',
-        email:'merc2@gc.com',
-        id:'sdfgshtrhffgngfngfng'
+        name:null,
+        email:null,
+        id:null,
+        type:null
       }
     },
+    ready: function () {
+      //this.name = this.username;
+      //console.log(this.username);
+    },
+    created: function(){
+      //initialize from props
+      this.name = this.username;
+      this.email= this.useremail;
+      this.id= this.userid;
+      this.type = "client";
+    },
     methods: {
-      //TODO
+      updateFunction: function() {
+        console.log(this.name);
+        // ref: https://developers.google.com/web/updates/2015/03/introduction-to-fetch
+        // https://appdividend.com/2018/08/20/javascript-fetch-api-example-tutorial/
+        // https://javascript.info/fetch-api
+        // https://michaelnthiessen.com/this-is-undefined/
+
+        var formData = new FormData();
+        formData.append("id",this.id);
+        formData.append("name",this.name);
+        formData.append("email",this.email);
+        formData.append("type",this.type);
+
+        fetch('/updateUserProfile', {
+          method: 'POST',
+          headers: {
+            "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+          },
+          body: new URLSearchParams(formData)          
+        }).then(function (data) { 
+          console.log('Request succeeded with JSON response', data);
+        })
+        .catch(function (error) {
+          console.log('Request failed', error);
+        });
+      }
     },
     computed: {
       //TODO
@@ -57,29 +97,47 @@
                                     <!-- <input type="text" placeholder="Search by keyword" aria-label="Search">
                                     <i class="fa fa-search" aria-hidden="true"></i> -->
                                     <select name="vendorCategory" id="vendorCategory" onchange="listVendorsByCat(this.value);">
-                                        <option v-for="pro in pros" :value="pro">{{pro}}</option>
+                                        <option value="noselection" selected>no selection</option>
+                                        <option v-for="pro in pros" >{{pro.vendorCategory}}</option>
                                     </select>                                                                                                           
                             </form>
                     </div> <!-- /.contact-form -->
 
                 </div> <!-- /.team-overlay -->
         </div> <!-- /.member-thumb -->                                                                               
-
       </div> <!-- /#service-1 -->
     `,
     data: function() {
       return {
-        pros: ["no selection", "electrical", "plumbing", "hvac"]
+        pros: []
       }
     },
+    created(){
+      this.getvendorcategories();
+    },
     methods: {
-      //TODO
+      //Ref: https://michaelnthiessen.com/this-is-undefined/
+      getvendorcategories() {
+        fetch('/getvendorcategories', {
+          method: 'GET'
+        })
+        .then(response => 
+          response.json()
+        )        
+        .then(data => {
+          this.pros = data;
+        })
+        .catch(err => console.error(err));
+      },
+      listVendorsByCat: function(){
+        //TODO
+      }
     },
     computed: {
       //TODO
     }
   })
-  
+
   Vue.component('vendor-search-results', {
     template:`
       <div class="service-item" id="service-3">
@@ -90,15 +148,15 @@
                     <span>Results</span>
 
                     <ul class="progess-bars" id="vendorList">
-                      <li v-for="vendor in vendors">                    
-                        <div class="progress">
-                          <div class="" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
-                          {{vendor.name}}&nbsp;<a v-on:click="createQuote(vendor.name, vendor.id, vendor.userid)">Get Quote!</a>
-                          </div>
-                        </div>                        
-                      </li>                                               
-                    </ul>
-
+                    <li v-for="vendor in vendors">                    
+                      <div class="progress">
+                        <div class="" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
+                        {{vendor.name}}&nbsp;<a v-on:click="createQuote(vendor.name, vendor.id, vendor.userid)">Get Quote!</a>
+                        </div>
+                      </div>                        
+                    </li>                                               
+                  </ul>
+ 
                 </div> <!-- /.team-overlay -->
         </div> <!-- /.member-thumb -->
       </div> <!-- /#service-1 -->
@@ -181,6 +239,6 @@
   const app = new Vue({
     el: '#app',
     data: {
-      myLocalProperty: 'Im a local property value 3'
+     
     }
   });
