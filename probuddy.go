@@ -142,7 +142,7 @@ func init(){
 	}
 
 	//tmpl := template.Must(template.ParseFiles("assets/client.html"))
-	// tmplClient, err = template.ParseFiles("assets/client.html")
+	//tmplClient, err = template.ParseFiles("assets/client.html")
 	tmplClient, err = template.ParseFiles("assets/clientvue.html")
 	if err != nil {
 		log.Fatalf("Failed to create template: %v", err)

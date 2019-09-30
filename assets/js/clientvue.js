@@ -1,4 +1,6 @@
-  Vue.component('profile', {
+// https://www.freecodecamp.org/news/the-vue-handbook-a-thorough-introduction-to-vue-js-1e86835d8446/
+// https://michaelnthiessen.com/this-is-undefined/
+Vue.component('profile', {
     props:{
       username: String,
       useremail: String,
@@ -52,7 +54,6 @@
     },
     methods: {
       updateFunction: function() {
-        console.log(this.name);
         // ref: https://developers.google.com/web/updates/2015/03/introduction-to-fetch
         // https://appdividend.com/2018/08/20/javascript-fetch-api-example-tutorial/
         // https://javascript.info/fetch-api
@@ -71,10 +72,10 @@
           },
           body: new URLSearchParams(formData)          
         }).then(function (data) { 
-          console.log('Request succeeded with JSON response', data);
+          //console.log('Request succeeded with JSON response', data);
         })
         .catch(function (error) {
-          console.log('Request failed', error);
+          //console.log('Request failed', error);
         });
       }
     },
@@ -96,9 +97,9 @@
                             <form method="post" name="contactform" id="contactform">                                                        
                                     <!-- <input type="text" placeholder="Search by keyword" aria-label="Search">
                                     <i class="fa fa-search" aria-hidden="true"></i> -->
-                                    <select name="vendorCategory" id="vendorCategory" onchange="listVendorsByCat(this.value);">
+                                    <select name="vendorCategory" id="vendorCategory" v-on:change="listVendorsByCat">
                                         <option value="noselection" selected>no selection</option>
-                                        <option v-for="pro in pros" >{{pro.vendorCategory}}</option>
+                                        <option v-for="pro in pros" :value="pro.vendorCategory">{{pro.vendorCategory}}</option>
                                     </select>                                                                                                           
                             </form>
                     </div> <!-- /.contact-form -->
@@ -116,8 +117,10 @@
       this.getvendorcategories();
     },
     methods: {
+
       //Ref: https://michaelnthiessen.com/this-is-undefined/
-      getvendorcategories() {
+      getvendorcategories() {      
+
         fetch('/getvendorcategories', {
           method: 'GET'
         })
@@ -129,8 +132,10 @@
         })
         .catch(err => console.error(err));
       },
-      listVendorsByCat: function(){
-        //TODO
+      listVendorsByCat:function (e) {
+
+        vendorCategory = e.target.value;
+        this.$root.$emit('get-vendorby-cat', vendorCategory);
       }
     },
     computed: {
@@ -139,6 +144,9 @@
   })
 
   Vue.component('vendor-search-results', {
+    props:{     
+      userid: String
+    },
     template:`
       <div class="service-item" id="service-3">
         <div class="member-thumb">
@@ -146,12 +154,11 @@
                 <div class="team-overlay">
                     <h3>My Vendor Search Results</h3>
                     <span>Results</span>
-
                     <ul class="progess-bars" id="vendorList">
                     <li v-for="vendor in vendors">                    
                       <div class="progress">
                         <div class="" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">
-                        {{vendor.name}}&nbsp;<a v-on:click="createQuote(vendor.name, vendor.id, vendor.userid)">Get Quote!</a>
+                        {{vendor.name}}&nbsp;<a v-on:click="createQuote(vendor.name, vendor.id, id)">Get Quote!</a>
                         </div>
                       </div>                        
                     </li>                                               
@@ -163,22 +170,57 @@
     `,
     data: function() {
       return {
-        vendors: [
-          {name:"Flash's Electrical",
-           id:"yMrF3nGhm1joBhq3LULCbArQgWMOkohA1K0Vwl_3-zM",          
-           userid:"Tf2s4vqBAkUUXaTft2vKso1hzhwjwfltrcvBEF_PgkY"
-           },
-           {name:"Virgil's Electrical",
-           id:"yZQScMigYV9SwHF1d44FFyeuV-co6AjYY4xC67ljCHg",          
-           userid:"Tf2s4vqBAkUUXaTft2vKso1hzhwjwfltrcvBEF_PgkY"
-           }           
-        ]
+        vendors: [],
+        id:null
       }
     },
+    mounted(){
+      this.$root.$on('get-vendorby-cat', (vendorCategory) => {
+        this.getVendorByCat(`${vendorCategory}`);
+      });
+    },
+    created: function(){
+      //initialize from props
+      this.id= this.userid;
+    },
     methods: {
-      createQuote: function(name,  id, userid) {
-        console.log("createQuote");
-        console.log(escape(name) + "," + id + "," + userid);
+      createQuote: function(vendorName, vendorId, clientId) {
+          var formData = new FormData();
+          formData.append("vendorName",vendorName);
+          formData.append("vendorId",vendorId);
+          formData.append("clientId",clientId);
+          formData.append("state","submitted");
+          formData.append("approved","false");
+          formData.append("price",0.0);
+  
+          fetch('/createQuoteRequest', {
+            method: 'POST',
+            headers: {
+              "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+            },
+            body: new URLSearchParams(formData)          
+          }).then(() => {//https://michaelnthiessen.com/this-is-undefined/
+            this.$root.$emit('get-quotesby-clientid', clientId);
+          });        
+      },
+      getVendorByCat: function(vendorCategory) {
+        var formData = new FormData();
+        formData.append("vendorCategory",vendorCategory);        
+
+        queryParams = new URLSearchParams(formData);
+        
+        fetch('/getvendorbycat?' + queryParams.toString(), {
+          method: 'GET',
+          // headers: {
+          //   "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+          // },   
+        })        
+        .then(response => 
+          response.json()
+        )        
+        .then(data => {
+          this.vendors = data;
+        }); 
       }
     },
     computed: {
@@ -187,6 +229,9 @@
   })
 
   Vue.component('vendor-quote-request', {
+    props:{     
+      userid: String
+    },
     template:`
           <div class="service-item" id="service-4">
           <div class="member-thumb">
@@ -198,11 +243,13 @@
                       <ul class="progess-bars" id="vendorQuoteList">
                       
                         <li v-for="quote in quotes">
-                          <div class="progress">
-                          <div class="" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="width: 90%;">{{quote.name}}&nbsp;(\${{quote.price}})&nbsp;<a v-on:click="updateQuoteRequest(quote.id, quote.name, quote.vendorId, quote.clientId, quote.state)">{{quote.state}}</a>
-                            </div>
-                            <input name="price" type="hidden" :id="'price_' + quote.id" placeholder="0" value="0">
+                        <div class='progress'>
+                          <div class='' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' style='width: 90%;'>
+                          {{quote.vendorName}}&nbsp($ {{quote.price}})&nbsp
+                          <a v-on:click='updateQuoteRequest(quote.id, quote.vendorName, quote.vendorId, quote.clientId, quote.state, quote.price)'>{{quote.state}}</a>
                           </div>
+                          <input name="price" type="hidden" :id="'price_' + quote.id" placeholder="0" value="0">
+                        </div>
                         </li>
 
                       </ul>
@@ -213,21 +260,65 @@
     `,
     data: function() {
       return {
-        quotes: [
-          {name:"Virgil's Electrical",
-           id:"9ms2NuYQ-lhk6b3SkNcWEz1HW2kTln8wFmWOWrdduS0",          
-           vendorId:"yZQScMigYV9SwHF1d44FFyeuV-co6AjYY4xC67ljCHg",
-           clientId:"Tf2s4vqBAkUUXaTft2vKso1hzhwjwfltrcvBEF_PgkY",
-           state:"submitted",
-           price:"350.75"
-          }         
-        ]
+        quotes: [],
+        id: null
       }
     },
+    mounted(){
+      this.$root.$on('get-quotesby-clientid', (clientId) => {
+        this.getQuotesByClientId (`${clientId}`);
+      });
+    },
+    created: function(){
+      //initialize from props
+      this.id= this.userid;
+      this.getQuotesByClientId(this.id);
+    },
     methods: {
-      updateQuoteRequest: function(id, vendorName, vendorId, clientId, state) {
-        console.log("updateQuoteRequest");
-        console.log(id + "," + escape(vendorName) + "," + vendorId + "," + clientId + "," + state);
+      updateQuoteRequest: function(quoteId, vendorName, vendorId, clientId, state, price) {
+        
+        // console.log(id + "," + vendorName + "," + vendorId + "," + clientId + "," + state);
+
+        var formData = new FormData();
+        formData.append("ID",quoteId);
+        formData.append("vendorName",vendorName);
+        formData.append("vendorId",vendorId);
+        formData.append("clientId",clientId);
+        formData.append("state",state);
+        formData.append("approved","false");
+        formData.append("price",price);
+
+        fetch('/updateQuoteRequest', {
+          method: 'POST',
+          headers: {
+            "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+          },
+          body: new URLSearchParams(formData)          
+        }).then(() => {//https://michaelnthiessen.com/this-is-undefined/
+          // this.$root.$emit('get-quotesby-clientid', clientId);
+           //update clients vendor quote request list
+          //  getQuotesByClientId(clientId);  
+        });
+
+      },
+      getQuotesByClientId: function(clientId){
+        var formData = new FormData();
+        formData.append("clientId",clientId);
+
+        queryParams = new URLSearchParams(formData);
+
+        fetch('/getQuoteRequestByClientId?' + queryParams.toString(), {
+          method: 'GET',
+          headers: {
+            "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+          },
+        })      
+        .then(response => 
+          response.json()
+        )        
+        .then(data => {
+          this.quotes = data;
+        });      
       }
     },
     computed: {
@@ -235,10 +326,17 @@
     }
   }) 
 
-
   const app = new Vue({
     el: '#app',
     data: {
      
     }
   });
+
+//   {name:"Virgil's Electrical",
+//   id:"9ms2NuYQ-lhk6b3SkNcWEz1HW2kTln8wFmWOWrdduS0",          
+//   vendorId:"yZQScMigYV9SwHF1d44FFyeuV-co6AjYY4xC67ljCHg",
+//   clientId:"Tf2s4vqBAkUUXaTft2vKso1hzhwjwfltrcvBEF_PgkY",
+//   state:"submitted",
+//   price:"350.75"
+//  }   
