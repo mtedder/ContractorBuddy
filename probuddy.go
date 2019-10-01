@@ -261,7 +261,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//fmt.Fprint(w, "Hello, World2!")
-	http.Redirect(w, r, "/assets/index.html", http.StatusFound)
+	http.Redirect(w, r, "/assets/indexvue.html", http.StatusFound)
 }
 
 /*
@@ -295,11 +295,12 @@ func userLoginRte(w http.ResponseWriter, r *http.Request){
 		
 		//if user not present in DB (registered) send to registration page
 		if (User{}) == user {
-			http.Redirect(w, r, "/assets/register.html", http.StatusFound)
+			http.Redirect(w, r, "/assets/registervue.html", http.StatusFound)
 		}
 		
-		if user.Type == "client" {					
-			tmplClient.Execute(w, user)//client template
+		if user.Type == "client" {	
+			tmplClient.Execute(w, user) //client template
+			// http.Redirect(w, r, "/assets/clientvue.html", http.StatusFound)
 		}else if user.Type == "vendor" {//forward to vendor page
 			tmplVendor.Execute(w, user)//client template
 		}
@@ -347,7 +348,6 @@ func registerUserRte(w http.ResponseWriter, r *http.Request) {
 	}else if newUser.Type == "vendor" {//forward to vendor page
 		tmplVendor.Execute(w, newUser)//client template
 	}
-	
 	//json.NewEncoder(w).Encode(&newUser)	
 }
 
