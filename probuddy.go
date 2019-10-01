@@ -46,6 +46,9 @@
 // export PATH=$PATH:/usr/local/go/bin:$GOPATH/bin
 
 // export GOOGLE_APPLICATION_CREDENTIALS="[PATH]"
+// To run from the command line type: go run probuddy.go
+// To deploy to google app engine type: gcloud app deploy
+// To open in browswe type: gcloud app browse
 
 // [START gae_go111_app]
 
