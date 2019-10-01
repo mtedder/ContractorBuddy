@@ -149,7 +149,8 @@ func init(){
 	}
 
 	//tmplVendor = template.Must(template.ParseFiles("assets/vendor.html"))
-	tmplVendor, err = template.ParseFiles("assets/vendor.html")
+	// tmplVendor, err = template.ParseFiles("assets/vendor.html")
+	tmplVendor, err = template.ParseFiles("assets/vendorvue.html")
 	if err != nil {
 		log.Fatalf("Failed to create template: %v", err)
 	}

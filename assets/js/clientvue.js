@@ -278,7 +278,9 @@ Vue.component('profile', {
       updateQuoteRequest: function(quoteId, vendorName, vendorId, clientId, state, price) {
         
         // console.log(id + "," + vendorName + "," + vendorId + "," + clientId + "," + state);
-
+        if(state === "pending"){
+          state = "approved";
+        }
         var formData = new FormData();
         formData.append("ID",quoteId);
         formData.append("vendorName",vendorName);
@@ -297,7 +299,7 @@ Vue.component('profile', {
         }).then(() => {//https://michaelnthiessen.com/this-is-undefined/
           // this.$root.$emit('get-quotesby-clientid', clientId);
            //update clients vendor quote request list
-          //  getQuotesByClientId(clientId);  
+          this.getQuotesByClientId(clientId);  
         });
 
       },
@@ -332,11 +334,3 @@ Vue.component('profile', {
      
     }
   });
-
-//   {name:"Virgil's Electrical",
-//   id:"9ms2NuYQ-lhk6b3SkNcWEz1HW2kTln8wFmWOWrdduS0",          
-//   vendorId:"yZQScMigYV9SwHF1d44FFyeuV-co6AjYY4xC67ljCHg",
-//   clientId:"Tf2s4vqBAkUUXaTft2vKso1hzhwjwfltrcvBEF_PgkY",
-//   state:"submitted",
-//   price:"350.75"
-//  }   
